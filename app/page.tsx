@@ -212,10 +212,19 @@ export default function Home() {
   const [selectedBooking, setSelectedBooking] =
     useState<any>(null);
 
+  const [editingBooking, setEditingBooking] =
+    useState<any>(null);
+
   const [searchUser, setSearchUser] =
     useState('');
 
   const [error, setError] = useState('');
+
+  const [phoneError, setPhoneError] =
+    useState('');
+
+  const [repeatWeeks, setRepeatWeeks] =
+    useState(1);
 
   const [formData, setFormData] = useState({
     nome: '',
@@ -298,6 +307,30 @@ export default function Home() {
     setSearchUser('');
   };
 
+  const handlePhoneChange = (
+    value: string
+  ) => {
+    const hasLetters = /[a-zA-Z]/.test(
+      value
+    );
+
+    if (hasLetters) {
+      setPhoneError(
+        'Nel numero di telefono puoi inserire solo numeri'
+      );
+    } else {
+      setPhoneError('');
+    }
+
+    const onlyNumbers =
+      value.replace(/\D/g, '');
+
+    setFormData({
+      ...formData,
+      telefono: onlyNumbers,
+    });
+  };
+
   const saveAppointment = () => {
     if (
       !formData.nome ||
@@ -313,19 +346,41 @@ export default function Home() {
       return;
     }
 
-    setAppointments({
-      ...appointments,
+    if (phoneError) {
+      return;
+    }
 
-      [
+    const updatedAppointments = {
+      ...appointments,
+    };
+
+    for (
+      let i = 0;
+      i < repeatWeeks;
+      i++
+    ) {
+      const repeatDate =
+        new Date(selectedDate);
+
+      repeatDate.setDate(
+        repeatDate.getDate() + i * 7
+      );
+
+      const key =
         `${selectedSportello}-${formatDate(
-          selectedDate
-        )}-${selectedSlot}`
-      ]: {
+          repeatDate
+        )}-${selectedSlot}`;
+
+      updatedAppointments[key] = {
         ...formData,
         prenotatoDa:
           utenteLoggato,
-      },
-    });
+      };
+    }
+
+    setAppointments(
+      updatedAppointments
+    );
 
     setSelectedSlot(null);
 
@@ -337,83 +392,12 @@ export default function Home() {
       intervento: '',
     });
 
+    setRepeatWeeks(1);
+
     setError('');
+
+    setPhoneError('');
   };
-
-  const deleteAppointment = (
-    key: string
-  ) => {
-    const conferma = confirm(
-      'Sei sicuro di voler cancellare questo appuntamento?'
-    );
-
-    if (!conferma) return;
-
-    const updated =
-      { ...appointments };
-
-    delete updated[key];
-
-    setAppointments(updated);
-
-    setSelectedBooking(null);
-  };
-
-  const handleDateClick = (
-    info: any
-  ) => {
-    const clickedDate =
-      new Date(info.dateStr);
-
-    const weekday =
-      clickedDate.getDay();
-
-    const iso =
-      formatISO(clickedDate);
-
-    if (
-      clickedDate < today
-    )
-      return;
-
-    if (
-      festivita[iso]
-    )
-      return;
-
-    if (
-      weekday !==
-      currentSportello.weekday
-    )
-      return;
-
-    setSelectedDate(clickedDate);
-  };
-
-  const validEvents = [];
-
-  for (
-    let d = new Date();
-    d <= new Date('2026-12-31');
-    d.setDate(d.getDate() + 1)
-  ) {
-    const weekday = d.getDay();
-
-    const iso =
-      formatISO(d);
-
-    if (
-      weekday ===
-        currentSportello.weekday &&
-      !festivita[iso]
-    ) {
-      validEvents.push({
-        start: iso,
-        display: 'background',
-        backgroundColor: '#bbf7d0',
-      });
-    }
-  }
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 p-8">
@@ -423,11 +407,6 @@ export default function Home() {
         <h1 className="text-5xl font-bold mb-8 text-center">
           Agenda Sportelli
         </h1>
-
-        <div className="mb-6 bg-white rounded-3xl p-4 shadow-xl text-lg">
-          👤 Operatore loggato:{' '}
-          <strong>{utenteLoggato}</strong>
-        </div>
 
         <div className="grid md:grid-cols-3 gap-4 mb-10">
 
@@ -484,25 +463,6 @@ export default function Home() {
 
           <div className="bg-white rounded-3xl p-6 shadow-xl">
 
-            <div className="flex gap-4 mb-6 text-sm flex-wrap">
-
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-green-300 rounded"></div>
-                Prenotabile
-              </div>
-
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-gray-300 rounded"></div>
-                Chiuso / passato
-              </div>
-
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-red-300 rounded"></div>
-                Festività
-              </div>
-
-            </div>
-
             <FullCalendar
               plugins={[
                 dayGridPlugin,
@@ -511,76 +471,6 @@ export default function Home() {
               initialView="dayGridMonth"
               locale={itLocale}
               height="auto"
-              dateClick={
-                handleDateClick
-              }
-              events={[
-                ...validEvents,
-
-                ...Object.entries(
-                  festivita
-                ).map(
-                  ([date, name]) => ({
-                    title:
-                      String(name),
-                    start: date,
-                    color: '#ef4444',
-                  })
-                ),
-              ]}
-              dayCellClassNames={(
-                arg
-              ) => {
-                const weekday =
-                  arg.date.getDay();
-
-                const iso =
-                  formatISO(
-                    arg.date
-                  );
-
-                if (
-                  arg.date <
-                  today
-                ) {
-                  return [
-                    'bg-gray-300 text-gray-500',
-                  ];
-                }
-
-                if (
-                  festivita[
-                    iso
-                  ]
-                ) {
-                  return [
-                    'bg-red-300 text-black font-bold',
-                  ];
-                }
-
-                if (
-                  weekday !==
-                  currentSportello.weekday
-                ) {
-                  return [
-                    'bg-gray-200 text-gray-500',
-                  ];
-                }
-
-                if (
-                  isSelectedDate(
-                    arg.date
-                  )
-                ) {
-                  return [
-                    'bg-blue-500 text-white font-bold border-4 border-blue-700 scale-105',
-                  ];
-                }
-
-                return [
-                  'bg-green-200 hover:bg-green-300 cursor-pointer transition-all',
-                ];
-              }}
             />
           </div>
 
@@ -599,21 +489,6 @@ export default function Home() {
                     {formatDate(
                       selectedDate
                     )}
-                  </div>
-
-                  <div className="mt-4 text-lg">
-                    🕒{' '}
-                    {
-                      currentSportello.start
-                    }{' '}
-                    -{' '}
-                    {
-                      currentSportello.end
-                    }
-                  </div>
-
-                  <div className="mt-4 text-sm bg-white/20 rounded-xl p-3">
-                    Giorno attualmente selezionato per la prenotazione
                   </div>
 
                 </div>
@@ -646,32 +521,15 @@ export default function Home() {
                           </div>
 
                           {booking ? (
-                            <>
-                              <div className="mt-3 text-lg font-bold">
-                                👤{' '}
-                                {
-                                  booking.nome
-                                }{' '}
-                                {
-                                  booking.cognome
-                                }
-                              </div>
-
-                              <button
-                                onClick={() =>
-                                  setSelectedBooking(
-                                    {
-                                      ...booking,
-                                      key,
-                                      slot,
-                                    }
-                                  )
-                                }
-                                className="mt-4 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-bold"
-                              >
-                                Dettagli appuntamento
-                              </button>
-                            </>
+                            <div className="mt-3 text-lg font-bold">
+                              👤{' '}
+                              {
+                                booking.nome
+                              }{' '}
+                              {
+                                booking.cognome
+                              }
+                            </div>
                           ) : (
                             <>
                               <div className="mt-2 text-gray-500">
@@ -706,65 +564,53 @@ export default function Home() {
       {selectedSlot && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
-          <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl">
+          <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh]">
 
-            <h2 className="text-3xl font-bold mb-2">
+            <h2 className="text-3xl font-bold mb-4">
               Nuovo Appuntamento
             </h2>
 
-            <div className="mb-6 text-gray-600">
-              {selectedSportello} •{' '}
-              {formatDate(
-                selectedDate
-              )}{' '}
-              • {selectedSlot}
-            </div>
+            <input
+              type="text"
+              placeholder="Cerca utente..."
+              value={searchUser}
+              onChange={(e) =>
+                setSearchUser(
+                  e.target.value
+                )
+              }
+              className="w-full p-3 border rounded-xl mb-4"
+            />
 
-            <div className="mb-4">
+            {searchUser && (
+              <div className="border rounded-xl mb-4">
 
-              <input
-                type="text"
-                placeholder="Cerca utente..."
-                value={searchUser}
-                onChange={(e) =>
-                  setSearchUser(
-                    e.target.value
+                {filteredUsers.map(
+                  (
+                    utente,
+                    index
+                  ) => (
+                    <div
+                      key={index}
+                      onClick={() =>
+                        selectUser(
+                          utente
+                        )
+                      }
+                      className="p-3 hover:bg-gray-100 cursor-pointer"
+                    >
+                      {
+                        utente.nome
+                      }{' '}
+                      {
+                        utente.cognome
+                      }
+                    </div>
                   )
-                }
-                className="w-full p-3 border rounded-xl"
-              />
+                )}
 
-              {searchUser && (
-                <div className="border rounded-xl mt-2 max-h-40 overflow-y-auto">
-
-                  {filteredUsers.map(
-                    (
-                      utente,
-                      index
-                    ) => (
-                      <div
-                        key={index}
-                        onClick={() =>
-                          selectUser(
-                            utente
-                          )
-                        }
-                        className="p-3 hover:bg-gray-100 cursor-pointer"
-                      >
-                        {
-                          utente.nome
-                        }{' '}
-                        {
-                          utente.cognome
-                        }
-                      </div>
-                    )
-                  )}
-
-                </div>
-              )}
-
-            </div>
+              </div>
+            )}
 
             {error && (
               <div className="bg-red-100 text-red-700 p-3 rounded-xl mb-4">
@@ -802,19 +648,27 @@ export default function Home() {
                 className="w-full p-3 border rounded-xl"
               />
 
-              <input
-                type="text"
-                placeholder="Telefono *"
-                value={formData.telefono}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    telefono:
-                      e.target.value,
-                  })
-                }
-                className="w-full p-3 border rounded-xl"
-              />
+              <div>
+                <input
+                  type="text"
+                  placeholder="Telefono *"
+                  value={
+                    formData.telefono
+                  }
+                  onChange={(e) =>
+                    handlePhoneChange(
+                      e.target.value
+                    )
+                  }
+                  className="w-full p-3 border rounded-xl"
+                />
+
+                {phoneError && (
+                  <div className="text-red-600 text-sm font-semibold mt-1">
+                    {phoneError}
+                  </div>
+                )}
+              </div>
 
               <input
                 type="email"
@@ -845,6 +699,31 @@ export default function Home() {
                 className="w-full p-3 border rounded-xl h-28"
               />
 
+              <div>
+
+                <label className="font-bold">
+                  Ripeti per settimane
+                </label>
+
+                <input
+                  type="number"
+                  min="1"
+                  max="52"
+                  value={
+                    repeatWeeks
+                  }
+                  onChange={(e) =>
+                    setRepeatWeeks(
+                      Number(
+                        e.target.value
+                      )
+                    )
+                  }
+                  className="w-full p-3 border rounded-xl mt-2"
+                />
+
+              </div>
+
             </div>
 
             <div className="flex gap-4 mt-6">
@@ -867,87 +746,6 @@ export default function Home() {
                 className="flex-1 bg-gray-300 hover:bg-gray-400 p-3 rounded-xl font-bold"
               >
                 Annulla
-              </button>
-
-            </div>
-
-          </div>
-        </div>
-      )}
-
-      {selectedBooking && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-
-          <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl">
-
-            <h2 className="text-3xl font-bold mb-6">
-              Dettaglio appuntamento
-            </h2>
-
-            <div className="space-y-3 text-lg">
-
-              <div>
-                👤{' '}
-                {
-                  selectedBooking.nome
-                }{' '}
-                {
-                  selectedBooking.cognome
-                }
-              </div>
-
-              <div>
-                📞{' '}
-                {
-                  selectedBooking.telefono
-                }
-              </div>
-
-              <div>
-                ✉️{' '}
-                {
-                  selectedBooking.email
-                }
-              </div>
-
-              <div>
-                📝{' '}
-                {
-                  selectedBooking.intervento
-                }
-              </div>
-
-              <div>
-                👨‍💼 Prenotato da:{' '}
-                {
-                  selectedBooking.prenotatoDa
-                }
-              </div>
-
-            </div>
-
-            <div className="flex gap-4 mt-8">
-
-              <button
-                onClick={() =>
-                  deleteAppointment(
-                    selectedBooking.key
-                  )
-                }
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white p-3 rounded-xl font-bold"
-              >
-                Cancella
-              </button>
-
-              <button
-                onClick={() =>
-                  setSelectedBooking(
-                    null
-                  )
-                }
-                className="flex-1 bg-gray-300 hover:bg-gray-400 p-3 rounded-xl font-bold"
-              >
-                Chiudi
               </button>
 
             </div>
