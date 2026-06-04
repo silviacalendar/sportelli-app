@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Papa from 'papaparse';
 
 import FullCalendar from '@fullcalendar/react';
 import dayGridPlugin from '@fullcalendar/daygrid';
@@ -8,21 +9,8 @@ import interactionPlugin from '@fullcalendar/interaction';
 
 import itLocale from '@fullcalendar/core/locales/it';
 
-const utenti = [
-  {
-    nome: 'Mario',
-    cognome: 'Rossi',
-    telefono: '3331234567',
-    email: 'mario@email.it',
-  },
-
-  {
-    nome: 'Giulia',
-    cognome: 'Bianchi',
-    telefono: '3337654321',
-    email: 'giulia@email.it',
-  },
-];
+const GOOGLE_SHEET_CSV =
+  'https://docs.google.com/spreadsheets/d/1vJ_w31uFtdzalNQEZlJAQMTHsTIvR5tUMBHNouI-Mck/export?format=csv&gid=0';
 
 const sportelli: any = {
   Bolzaneto: {
@@ -37,7 +25,7 @@ const sportelli: any = {
     weekday: 2,
     day: 'Martedì',
     start: '09:30',
-    end: '11:45',
+    end: '13:00',
     address:
       "Piazza Unità d'Italia (presso uffici Arte)",
   },
@@ -54,7 +42,7 @@ const sportelli: any = {
     weekday: 3,
     day: 'Mercoledì',
     start: '09:00',
-    end: '13:30',
+    end: '14:00',
     address: 'Via Sampierdarena, 34',
   },
 
@@ -62,7 +50,7 @@ const sportelli: any = {
     weekday: 3,
     day: 'Mercoledì',
     start: '09:00',
-    end: '12:45',
+    end: '13:00',
     address: 'Via Cravasco 32',
   },
 
@@ -70,7 +58,7 @@ const sportelli: any = {
     weekday: 5,
     day: 'Venerdì',
     start: '09:00',
-    end: '12:45',
+    end: '13:00',
     address: 'Via Prè, 151 rosso',
   },
 
@@ -78,7 +66,7 @@ const sportelli: any = {
     weekday: 4,
     day: 'Giovedì',
     start: '09:00',
-    end: '14:15',
+    end: '14:30',
     address:
       'Via Santa Maria di Castello, 33',
   },
@@ -134,6 +122,7 @@ function generateSlots(
         '09:30 - 10:15',
         '10:15 - 11:00',
         '11:00 - 11:45',
+        '11:45 - 12:30',
       ];
 
     case 'Posta Vecchia':
@@ -191,6 +180,8 @@ function generateSlots(
 }
 
 export default function Home() {
+  console.log('HOME CARICATA');
+
   const [utenteLoggato] = useState(
     'Operatore Admin'
   );
@@ -205,6 +196,9 @@ export default function Home() {
 
   const [appointments, setAppointments] =
     useState<any>({});
+
+    const [utenti, setUtenti] =
+  useState<any[]>([]);
 
   const [selectedSlot, setSelectedSlot] =
     useState<string | null>(null);
@@ -288,7 +282,31 @@ export default function Home() {
     setSelectedDate(firstDate);
   }, [selectedSportello]);
 
-  const filteredUsers = utenti.filter(
+  
+  useEffect(() => {console.log('USEEFFECT PARTITO');
+    Papa.parse(GOOGLE_SHEET_CSV, {
+      download: true,
+      header: true,
+      complete: (results: any) => {
+        console.log('CSV CARICATO', results);
+  console.log('RISULTATI CSV', results);
+
+  const elenco = (results.data || []).map((row: any) => ({
+    nome: row.NOME || '',
+    cognome: row.COGNOME || '',
+    telefono: row.TELEFONO || '',
+    email: row.EMAIL || '',
+    bloccato: String(row.BLOCCATO || '').trim().toUpperCase() === 'SI',
+  }));
+
+  console.log('ELENCO UTENTI', elenco);
+
+  setUtenti(elenco);
+},
+    });
+  }, []);
+
+const filteredUsers = utenti.filter(
     (utente) =>
       `${utente.nome} ${utente.cognome}`
         .toLowerCase()
@@ -332,6 +350,7 @@ export default function Home() {
   };
 
   const saveAppointment = () => {
+    if (utenteBloccato) return;
     if (
       !formData.nome ||
       !formData.cognome ||
@@ -405,7 +424,7 @@ export default function Home() {
       <div className="max-w-7xl mx-auto">
 
         <h1 className="text-5xl font-bold mb-8 text-center">
-          Agenda Sportelli
+          Agenda Sportelli test 123
         </h1>
 
         <div className="grid md:grid-cols-3 gap-4 mb-10">
@@ -609,6 +628,12 @@ export default function Home() {
                   )
                 )}
 
+              </div>
+            )}
+
+            {utenteBloccato && (
+              <div className="bg-red-600 text-white p-3 rounded-xl mb-4 font-bold">
+                ⚠️ ATTENZIONE! Utente bloccato. Non è possibile prenotare appuntamenti con questo utente. Verificare su portale.
               </div>
             )}
 
