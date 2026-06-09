@@ -11,6 +11,8 @@ import itLocale from '@fullcalendar/core/locales/it';
 
 const GOOGLE_SHEET_CSV =
   'https://docs.google.com/spreadsheets/d/1vJ_w31uFtdzalNQEZlJAQMTHsTIvR5tUMBHNouI-Mck/export?format=csv&gid=0';
+const APPS_SCRIPT_URL =
+  'https://script.google.com/macros/s/AKfycbwvyj7YVUXoElN4sjVfsBZ1X-vFCa1JMBMLQXJc4_xS4fYe1lfNYbT9haMt-IKkpXJ_/exec';
 
 const sportelli: any = {
   Bolzaneto: {
@@ -316,17 +318,21 @@ const filteredUsers = utenti.filter(
         .includes(searchUser.toLowerCase())
   );
 
-  const selectUser = (utente: any) => {
-    setFormData({
-      ...formData,
-      nome: utente.nome,
-      cognome: utente.cognome,
-      telefono: utente.telefono,
-      email: utente.email,
-    });
+ const selectUser = (utente: any) => {
+  setFormData({
+    ...formData,
+    nome: utente.nome,
+    cognome: utente.cognome,
+    telefono: utente.telefono,
+    email: utente.email,
+  });
 
-    setSearchUser('');
-  };
+  setUtenteBloccato(
+    utente.bloccato === true
+  );
+
+  setSearchUser('');
+};
 
   const handlePhoneChange = (
     value: string
@@ -403,6 +409,23 @@ const filteredUsers = utenti.filter(
     setAppointments(
       updatedAppointments
     );
+    fetch(APPS_SCRIPT_URL, {
+  method: 'POST',
+  mode: 'no-cors',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  body: JSON.stringify({
+    data: selectedDate,
+    ora: selectedSlot,
+    nome: formData.nome,
+    cognome: formData.cognome,
+    telefono: formData.telefono,
+    email: formData.email,
+    intervento: formData.intervento,
+    operatore: utenteLoggato,
+  }),
+});
     setEditingBooking(null);
     
     setSelectedSlot(null);
