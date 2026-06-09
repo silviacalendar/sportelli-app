@@ -217,6 +217,9 @@ export default function Home() {
   const [phoneError, setPhoneError] =
     useState('');
 
+  const [utenteBloccato, setUtenteBloccato] =
+  useState(false);
+
   const [repeatWeeks, setRepeatWeeks] =
     useState(1);
 
@@ -400,7 +403,8 @@ const filteredUsers = utenti.filter(
     setAppointments(
       updatedAppointments
     );
-
+    setEditingBooking(null);
+    
     setSelectedSlot(null);
 
     setFormData({
@@ -540,16 +544,25 @@ const filteredUsers = utenti.filter(
                           </div>
 
                           {booking ? (
-                            <div className="mt-3 text-lg font-bold">
-                              👤{' '}
-                              {
-                                booking.nome
-                              }{' '}
-                              {
-                                booking.cognome
-                              }
-                            </div>
-                          ) : (
+                        <div>
+                          <div className="mt-3 text-lg font-bold">
+                            👤 {booking.nome} {booking.cognome}
+                          </div>
+
+                          <button
+                            onClick={() =>
+                              setSelectedBooking({
+                                ...booking,
+                                slot,
+                                key,
+                              })
+                            }
+                            className="mt-3 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-bold"
+                          >
+                            Apri appuntamento
+                          </button>
+                        </div>
+                      ) : (
                             <>
                               <div className="mt-2 text-gray-500">
                                 Disponibile
@@ -579,7 +592,101 @@ const filteredUsers = utenti.filter(
           </div>
         </div>
       </div>
+{selectedBooking && (
+  <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
+    <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl">
+
+      <h2 className="text-3xl font-bold mb-4">
+        Dettaglio appuntamento
+      </h2>
+
+      <div className="space-y-3">
+
+        <div>
+          <b>Nome:</b> {selectedBooking.nome}
+        </div>
+
+        <div>
+          <b>Cognome:</b> {selectedBooking.cognome}
+        </div>
+
+        <div>
+          <b>Telefono:</b> {selectedBooking.telefono}
+        </div>
+
+        <div>
+          <b>Email:</b> {selectedBooking.email}
+        </div>
+
+        <div>
+          <b>Intervento:</b> {selectedBooking.intervento}
+        </div>
+
+      </div>
+
+      <div className="flex gap-3 mt-6">
+
+        <button
+          onClick={() => {
+            setFormData({
+              nome: selectedBooking.nome,
+              cognome: selectedBooking.cognome,
+              telefono: selectedBooking.telefono,
+              email: selectedBooking.email,
+              intervento:
+                selectedBooking.intervento,
+            });
+
+            setEditingBooking(
+              selectedBooking
+            );
+
+            setSelectedSlot(
+              selectedBooking.slot
+            );
+
+            setSelectedBooking(null);
+          }}
+          className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white p-3 rounded-xl font-bold"
+        >
+          Modifica
+        </button>
+
+        <button
+          onClick={() => {
+            const updated = {
+              ...appointments,
+            };
+
+            delete updated[
+              selectedBooking.key
+            ];
+
+            setAppointments(updated);
+
+            setSelectedBooking(null);
+          }}
+          className="flex-1 bg-red-500 hover:bg-red-600 text-white p-3 rounded-xl font-bold"
+        >
+          Elimina
+        </button>
+
+      </div>
+
+      <button
+        onClick={() =>
+          setSelectedBooking(null)
+        }
+        className="w-full mt-4 bg-gray-300 hover:bg-gray-400 p-3 rounded-xl font-bold"
+      >
+        Chiudi
+      </button>
+
+    </div>
+
+  </div>
+)}
       {selectedSlot && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
