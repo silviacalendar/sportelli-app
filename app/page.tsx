@@ -11,8 +11,10 @@ import itLocale from '@fullcalendar/core/locales/it';
 
 const GOOGLE_SHEET_CSV =
   'https://docs.google.com/spreadsheets/d/1vJ_w31uFtdzalNQEZlJAQMTHsTIvR5tUMBHNouI-Mck/export?format=csv&gid=0';
-const APPS_SCRIPT_URL =
-  'https://script.google.com/macros/s/AKfycbwvyj7YVUXoElN4sjVfsBZ1X-vFCa1JMBMLQXJc4_xS4fYe1lfNYbT9haMt-IKkpXJ_/exec';
+const APPOINTMENTS_CSV =
+  'https://docs.google.com/spreadsheets/d/e/2PACX-1vR2pcPyjSYFcjpU8AJeCpm1MUSV9xhU450VPzpldmKcH5x-hKPxcUWpEZ-WaIi9H7n8crHNr01HdsM_/pub?gid=1468271223&single=true&output=csv';
+  const APPS_SCRIPT_URL =
+  'https://script.google.com/macros/s/AKfycbx6NlG_V32p8gZxCdBpQPS5iac1ubW1ZHKdX8wRGzyRzstDPWu-N57nYubv0SuowN8/exec';
 
 const sportelli: any = {
   Bolzaneto: {
@@ -190,8 +192,8 @@ export default function Home() {
 
   const [
     selectedSportello,
-    setSelectedSportello,
-  ] = useState('Bolzaneto');
+    setSelectedSportello,] = 
+    useState('Bolzaneto');
 
   const [selectedDate, setSelectedDate] =
     useState<any>(null);
@@ -310,7 +312,61 @@ export default function Home() {
 },
     });
   }, []);
+useEffect(() => {
+  Papa.parse(APPOINTMENTS_CSV, {
+    download: true,
+    header: true,
+    complete: (results: any) => {
+      console.log(
+        'APPUNTAMENTI CSV',
+        results
+      );
 
+      const loadedAppointments: any = {};
+
+      (results.data || []).forEach(
+        (row: any) => {
+          if (
+            !row.DATA ||
+            !row.ORA
+          ) {
+            return;
+          }
+
+          const data = new Date(
+            row.DATA
+          );
+
+          const giorno =
+            formatDate(data);
+
+          const key =
+            `${row.SPORTELLO}-${giorno}-${row.ORA}`;
+
+          loadedAppointments[key] = {
+            nome: row.NOME,
+            cognome: row.COGNOME,
+            telefono: row.TELEFONO,
+            email: row.EMAIL,
+            intervento:
+              row.INTERVENTO,
+            prenotatoDa:
+              row.OPERATORE,
+          };
+        }
+      );
+
+      console.log(
+        'APPOINTMENTS CARICATI',
+        loadedAppointments
+      );
+
+      setAppointments(
+        loadedAppointments
+      );
+    },
+  });
+}, []);
 const filteredUsers = utenti.filter(
     (utente) =>
       `${utente.nome} ${utente.cognome}`
@@ -424,6 +480,7 @@ const filteredUsers = utenti.filter(
     email: formData.email,
     intervento: formData.intervento,
     operatore: utenteLoggato,
+    sportello: selectedSportello,
   }),
 });
     setEditingBooking(null);
@@ -451,7 +508,7 @@ const filteredUsers = utenti.filter(
       <div className="max-w-7xl mx-auto">
 
         <h1 className="text-5xl font-bold mb-8 text-center">
-          Agenda Sportelli test 123
+          Agenda Sportelli
         </h1>
 
         <div className="grid md:grid-cols-3 gap-4 mb-10">
