@@ -105,7 +105,18 @@ function formatDate(date: Date) {
 }
 
 function formatISO(date: Date) {
-  return date.toISOString().split('T')[0];
+  const day = String(
+    date.getDate()
+  ).padStart(2, '0');
+
+  const month = String(
+    date.getMonth() + 1
+  ).padStart(2, '0');
+
+  const year =
+    date.getFullYear();
+
+  return `${year}-${month}-${day}`;
 }
 
 function generateSlots(
@@ -567,14 +578,114 @@ const filteredUsers = utenti.filter(
           <div className="bg-white rounded-3xl p-6 shadow-xl">
 
             <FullCalendar
-              plugins={[
-                dayGridPlugin,
-                interactionPlugin,
-              ]}
-              initialView="dayGridMonth"
-              locale={itLocale}
-              height="auto"
-            />
+  plugins={[
+    dayGridPlugin,
+    interactionPlugin,
+  ]}
+  initialView="dayGridMonth"
+  locale={itLocale}
+  height="auto"
+  dateClick={(info) => {
+    const clickedDate = info.date;
+const oggi = new Date();
+
+oggi.setHours(0, 0, 0, 0);
+
+if (clickedDate < oggi) {
+  return;
+}
+    const weekday =
+      clickedDate.getDay();
+
+    const iso =
+      formatISO(clickedDate);
+
+    if (
+      weekday !==
+        currentSportello.weekday ||
+      festivita[iso]
+    ) {
+      return;
+    }
+
+    setSelectedDate(
+      clickedDate
+    );
+  }}
+dayCellClassNames={(arg) => {
+  const weekday =
+    arg.date.getDay();
+
+  const iso =
+    formatISO(arg.date);
+
+  const oggi =
+    new Date();
+
+  oggi.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  if (
+    festivita[iso]
+  ) {
+    return ['bg-red-200'];
+  }
+
+  if (
+    arg.date < oggi
+  ) {
+    return ['bg-gray-200'];
+  }
+
+  if (
+    weekday ===
+    currentSportello.weekday
+  ) {
+    if (
+      isSelectedDate(
+        arg.date
+      )
+    ) {
+      return [
+        'bg-blue-500',
+        'text-white',
+      ];
+    }
+
+    return [
+      'bg-green-100',
+    ];
+  }
+
+  return [
+    'bg-gray-100',
+  ];
+}}
+dayCellContent={(arg) => {
+  const iso =
+    formatISO(arg.date);
+
+  return (
+    <div className="text-center">
+      <div>
+        {arg.dayNumberText}
+      </div>
+
+      {festivita[iso] && (
+        <div className="text-[10px] font-bold text-red-700">
+          {
+            festivita[iso]
+          }
+        </div>
+      )}
+    </div>
+  );
+}}
+/>
           </div>
 
           <div>
@@ -649,11 +760,41 @@ const filteredUsers = utenti.filter(
                               </div>
 
                               <button
-                                onClick={() =>
-                                  setSelectedSlot(
-                                    slot
-                                  )
-                                }
+                                onClick={() => {
+
+  const oggi =
+    new Date();
+
+  oggi.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  const dataSelezionata =
+    new Date(
+      selectedDate
+    );
+
+  dataSelezionata.setHours(
+    0,
+    0,
+    0,
+    0
+  );
+
+  if (
+    dataSelezionata <
+    oggi
+  ) {
+    return;
+  }
+
+  setSelectedSlot(
+    slot
+  );
+}}
                                 className="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-bold"
                               >
                                 Prenota
@@ -703,7 +844,7 @@ const filteredUsers = utenti.filter(
           <b>Intervento:</b> {selectedBooking.intervento}
         </div>
 
-      </div>
+            </div>
 
       <div className="flex gap-3 mt-6">
 
@@ -714,18 +855,11 @@ const filteredUsers = utenti.filter(
               cognome: selectedBooking.cognome,
               telefono: selectedBooking.telefono,
               email: selectedBooking.email,
-              intervento:
-                selectedBooking.intervento,
+              intervento: selectedBooking.intervento,
             });
 
-            setEditingBooking(
-              selectedBooking
-            );
-
-            setSelectedSlot(
-              selectedBooking.slot
-            );
-
+            setEditingBooking(selectedBooking);
+            setSelectedSlot(selectedBooking.slot);
             setSelectedBooking(null);
           }}
           className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white p-3 rounded-xl font-bold"
@@ -739,12 +873,9 @@ const filteredUsers = utenti.filter(
               ...appointments,
             };
 
-            delete updated[
-              selectedBooking.key
-            ];
+            delete updated[selectedBooking.key];
 
             setAppointments(updated);
-
             setSelectedBooking(null);
           }}
           className="flex-1 bg-red-500 hover:bg-red-600 text-white p-3 rounded-xl font-bold"
@@ -754,20 +885,10 @@ const filteredUsers = utenti.filter(
 
       </div>
 
-      <button
-        onClick={() =>
-          setSelectedBooking(null)
-        }
-        className="w-full mt-4 bg-gray-300 hover:bg-gray-400 p-3 rounded-xl font-bold"
-      >
-        Chiudi
-      </button>
-
     </div>
-
   </div>
 )}
-      {selectedSlot && (
+          {selectedSlot && (
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
 
           <div className="bg-white p-8 rounded-3xl w-full max-w-md shadow-2xl overflow-y-auto max-h-[90vh]">
