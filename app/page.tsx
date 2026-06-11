@@ -593,102 +593,67 @@ const filteredUsers = utenti.filter(
   initialView="dayGridMonth"
   locale={itLocale}
   height="auto"
+
   dateClick={(info) => {
-  const clickedDate = info.date;
+    const clickedDate = info.date;
 
-  const weekday = clickedDate.getDay();
-  const iso = formatISO(clickedDate);
+    const weekday = clickedDate.getDay();
+    const iso = formatISO(clickedDate);
 
-  const oggi = new Date();
-  oggi.setHours(0, 0, 0, 0);
-
-  const d = new Date(clickedDate);
-  d.setHours(0, 0, 0, 0);
-
-  if (
-    weekday !== currentSportello.weekday ||
-    festivita[iso]
-  ) {
-    return;
-  }
-
-  setSelectedDate(clickedDate);
-
-  // NON blocchiamo più il click sulle date passate
-}}
-dayCellClassNames={(arg) => {
-  const weekday =
-    arg.date.getDay();
-
-  const iso =
-    formatISO(arg.date);
-
-  const oggi =
-    new Date();
-
-  oggi.setHours(
-    0,
-    0,
-    0,
-    0
-  );
-
-  if (
-    festivita[iso]
-  ) {
-    return ['bg-red-200'];
-  }
-
-  if (
-    arg.date < oggi
-  ) {
-    return ['bg-gray-200'];
-  }
-
-  if (
-    weekday ===
-    currentSportello.weekday
-  ) {
-    if (
-      isSelectedDate(
-        arg.date
-      )
-    ) {
-      return [
-        'bg-blue-500',
-        'text-white',
-      ];
+    if (festivita[iso]) {
+      return;
     }
 
-    return [
-      'bg-green-100',
-    ];
-  }
+    const sportelloTrovato = Object.keys(sportelli).find(
+      (s) => sportelli[s].weekday === weekday
+    );
 
-  return [
-    'bg-gray-100',
-  ];
-}}
-dayCellContent={(arg) => {
-  const iso =
-    formatISO(arg.date);
+    if (sportelloTrovato) {
+      setSelectedSportello(sportelloTrovato);
+    }
 
-  return (
-    <div className="text-center">
-      <div>
-        {arg.dayNumberText}
+    setSelectedDate(clickedDate);
+  }}
+
+  dayCellClassNames={(arg) => {
+    const weekday = arg.date.getDay();
+    const iso = formatISO(arg.date);
+
+    const oggi = new Date();
+    oggi.setHours(0, 0, 0, 0);
+
+    if (festivita[iso]) {
+      return ['bg-red-200'];
+    }
+
+    if (arg.date < oggi) {
+      return ['bg-gray-200'];
+    }
+
+    if (weekday === currentSportello.weekday) {
+      if (isSelectedDate(arg.date)) {
+        return ['bg-blue-500', 'text-white'];
+      }
+      return ['bg-green-100'];
+    }
+
+    return ['bg-gray-100'];
+  }}
+
+  dayCellContent={(arg) => {
+    const iso = formatISO(arg.date);
+
+    return (
+      <div className="text-center">
+        <div>{arg.dayNumberText}</div>
+        {festivita[iso] && (
+          <div className="text-[10px] font-bold text-red-700">
+            {festivita[iso]}
+          </div>
+        )}
       </div>
-
-      {festivita[iso] && (
-        <div className="text-[10px] font-bold text-red-700">
-          {
-            festivita[iso]
-          }
-        </div>
-      )}
-    </div>
-  );
-}}
+    );
+  }}
 />
 <div className="mt-6 bg-white p-4 rounded-2xl shadow space-y-2">
 
