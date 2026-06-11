@@ -252,7 +252,15 @@ export default function Home() {
   const slots = generateSlots(
     selectedSportello
   );
+const isPastDate = (date: Date) => {
+  const oggi = new Date();
+  oggi.setHours(0, 0, 0, 0);
 
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+
+  return d < oggi;
+};
   const today = new Date();
 
   const isSelectedDate = (
@@ -586,32 +594,28 @@ const filteredUsers = utenti.filter(
   locale={itLocale}
   height="auto"
   dateClick={(info) => {
-    const clickedDate = info.date;
-const oggi = new Date();
+  const clickedDate = info.date;
 
-oggi.setHours(0, 0, 0, 0);
+  const weekday = clickedDate.getDay();
+  const iso = formatISO(clickedDate);
 
-if (clickedDate < oggi) {
-  return;
-}
-    const weekday =
-      clickedDate.getDay();
+  const oggi = new Date();
+  oggi.setHours(0, 0, 0, 0);
 
-    const iso =
-      formatISO(clickedDate);
+  const d = new Date(clickedDate);
+  d.setHours(0, 0, 0, 0);
 
-    if (
-      weekday !==
-        currentSportello.weekday ||
-      festivita[iso]
-    ) {
-      return;
-    }
+  if (
+    weekday !== currentSportello.weekday ||
+    festivita[iso]
+  ) {
+    return;
+  }
 
-    setSelectedDate(
-      clickedDate
-    );
-  }}
+  setSelectedDate(clickedDate);
+
+  // NON blocchiamo più il click sulle date passate
+}}
 dayCellClassNames={(arg) => {
   const weekday =
     arg.date.getDay();
@@ -686,6 +690,31 @@ dayCellContent={(arg) => {
   );
 }}
 />
+<div className="mt-6 bg-white p-4 rounded-2xl shadow space-y-2">
+
+  <h3 className="font-bold text-lg mb-2">Legenda</h3>
+
+  <div className="flex items-center gap-2">
+    <div className="w-4 h-4 bg-green-100 border"></div>
+    <span>Giorno disponibile</span>
+  </div>
+
+  <div className="flex items-center gap-2">
+    <div className="w-4 h-4 bg-red-200 border"></div>
+    <span>Giorno festivo / non disponibile</span>
+  </div>
+
+  <div className="flex items-center gap-2">
+    <div className="w-4 h-4 bg-gray-200 border"></div>
+    <span>Giorno passato (bloccato prenotazioni)</span>
+  </div>
+
+  <div className="flex items-center gap-2">
+    <div className="w-4 h-4 bg-blue-500"></div>
+    <span>Giorno selezionato</span>
+  </div>
+
+</div>
           </div>
 
           <div>
@@ -721,6 +750,7 @@ dayCellContent={(arg) => {
                       const booking =
                         appointments[key];
 
+        
                       return (
                         <div
                           key={slot}
@@ -736,23 +766,32 @@ dayCellContent={(arg) => {
 
                           {booking ? (
                         <div>
-                          <div className="mt-3 text-lg font-bold">
-                            👤 {booking.nome} {booking.cognome}
-                          </div>
+  <div className="mt-3 text-lg font-bold">
+    👤 {booking.nome} {booking.cognome}
+  </div>
 
-                          <button
-                            onClick={() =>
-                              setSelectedBooking({
-                                ...booking,
-                                slot,
-                                key,
-                              })
-                            }
-                            className="mt-3 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-bold"
-                          >
-                            Apri appuntamento
-                          </button>
-                        </div>
+  {!isPastDate(selectedDate) && (
+    <button
+      onClick={() =>
+        setSelectedBooking({
+          ...booking,
+          slot,
+          key,
+          date: selectedDate,
+        })
+      }
+      className="mt-3 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-bold"
+    >
+      Apri appuntamento
+    </button>
+  )}
+
+  {isPastDate(selectedDate) && (
+    <div className="mt-2 text-gray-500 text-sm font-bold">
+      Solo visualizzazione (storico)
+    </div>
+  )}
+</div>
                       ) : (
                             <>
                               <div className="mt-2 text-gray-500">
@@ -823,69 +862,75 @@ dayCellContent={(arg) => {
       </h2>
 
       <div className="space-y-3">
-
-        <div>
-          <b>Nome:</b> {selectedBooking.nome}
-        </div>
-
-        <div>
-          <b>Cognome:</b> {selectedBooking.cognome}
-        </div>
-
-        <div>
-          <b>Telefono:</b> {selectedBooking.telefono}
-        </div>
-
-        <div>
-          <b>Email:</b> {selectedBooking.email}
-        </div>
-
-        <div>
-          <b>Intervento:</b> {selectedBooking.intervento}
-        </div>
-
-            </div>
+        <div><b>Nome:</b> {selectedBooking.nome}</div>
+        <div><b>Cognome:</b> {selectedBooking.cognome}</div>
+        <div><b>Telefono:</b> {selectedBooking.telefono}</div>
+        <div><b>Email:</b> {selectedBooking.email}</div>
+        <div><b>Intervento:</b> {selectedBooking.intervento}</div>
+      </div>
 
       <div className="flex gap-3 mt-6">
 
-        <button
-          onClick={() => {
-            setFormData({
-              nome: selectedBooking.nome,
-              cognome: selectedBooking.cognome,
-              telefono: selectedBooking.telefono,
-              email: selectedBooking.email,
-              intervento: selectedBooking.intervento,
-            });
+        {isPastDate(selectedBooking.date) ? (
+  <>
+    <div className="text-center text-gray-500 font-bold mt-4">
+      📌 Appuntamento storico (solo visualizzazione)
+    </div>
 
-            setEditingBooking(selectedBooking);
-            setSelectedSlot(selectedBooking.slot);
-            setSelectedBooking(null);
-          }}
-          className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white p-3 rounded-xl font-bold"
-        >
-          Modifica
-        </button>
+    <button
+      onClick={() => setSelectedBooking(null)}
+      className="w-full mt-4 bg-gray-300 hover:bg-gray-400 p-3 rounded-xl font-bold"
+    >
+      Chiudi
+    </button>
+  </>
+) : (
+  <>
+    <button
+      onClick={() => {
+        setFormData({
+          nome: selectedBooking.nome,
+          cognome: selectedBooking.cognome,
+          telefono: selectedBooking.telefono,
+          email: selectedBooking.email,
+          intervento: selectedBooking.intervento,
+        });
 
-        <button
-          onClick={() => {
-            const updated = {
-              ...appointments,
-            };
+        setEditingBooking(selectedBooking);
+        setSelectedSlot(selectedBooking.slot);
+        setSelectedBooking(null);
+      }}
+      className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white p-3 rounded-xl font-bold"
+    >
+      Modifica
+    </button>
 
-            delete updated[selectedBooking.key];
+    <button
+      onClick={() => {
+        const updated = { ...appointments };
+        delete updated[selectedBooking.key];
 
-            setAppointments(updated);
-            setSelectedBooking(null);
-          }}
-          className="flex-1 bg-red-500 hover:bg-red-600 text-white p-3 rounded-xl font-bold"
-        >
-          Elimina
-        </button>
+        setAppointments(updated);
+        setSelectedBooking(null);
+      }}
+      className="flex-1 bg-red-500 hover:bg-red-600 text-white p-3 rounded-xl font-bold"
+    >
+      Elimina
+    </button>
+
+    <button
+      onClick={() => setSelectedBooking(null)}
+      className="flex-1 bg-gray-300 hover:bg-gray-400 p-3 rounded-xl font-bold"
+    >
+      Chiudi
+    </button>
+  </>
+)}
 
       </div>
 
     </div>
+
   </div>
 )}
           {selectedSlot && (
