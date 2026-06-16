@@ -8,6 +8,7 @@ import dayGridPlugin from '@fullcalendar/daygrid';
 import interactionPlugin from '@fullcalendar/interaction';
 
 import itLocale from '@fullcalendar/core/locales/it';
+import { useRef } from 'react';
 
 const GOOGLE_SHEET_CSV =
   'https://docs.google.com/spreadsheets/d/1vJ_w31uFtdzalNQEZlJAQMTHsTIvR5tUMBHNouI-Mck/export?format=csv&gid=0';
@@ -201,6 +202,8 @@ export default function Home() {
     'Operatore Admin'
   );
 
+  const calendarRef = useRef<any>(null);
+
   const [
     selectedSportello,
     setSelectedSportello,] = 
@@ -239,6 +242,8 @@ export default function Home() {
     useState(1);
 
   const [formData, setFormData] = useState({
+    
+    
     nome: '',
     cognome: '',
     telefono: '',
@@ -584,8 +589,36 @@ const filteredUsers = utenti.filter(
         <div className="grid lg:grid-cols-2 gap-8">
 
           <div className="bg-white rounded-3xl p-6 shadow-xl">
+ 
+ <div className="flex justify-end mb-4">
+    <button
+      onClick={() => {
+        const api = calendarRef.current?.getApi?.();
+        if (!api) return;
+
+        const today = new Date();
+
+        api.gotoDate(today);
+        setSelectedDate(today);
+
+        const weekday = today.getDay();
+
+        const sportelloTrovato = Object.keys(sportelli).find(
+          (s) => sportelli[s].weekday === weekday
+        );
+
+        if (sportelloTrovato) {
+          setSelectedSportello(sportelloTrovato);
+        }
+      }}
+      className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-bold"
+    >
+      Oggi
+    </button>
+  </div>
 
             <FullCalendar
+            ref={calendarRef}
   plugins={[
     dayGridPlugin,
     interactionPlugin,
@@ -593,6 +626,64 @@ const filteredUsers = utenti.filter(
   initialView="dayGridMonth"
   locale={itLocale}
   height="auto"
+  
+  initialDate={selectedDate}
+
+headerToolbar={{
+  left: 'prev,next today',
+  center: 'title',
+  right: ''
+}}
+
+customButtons={{
+  today: {
+    text: 'Oggi',
+    click: () => {
+      const oggi = new Date();
+  const api = calendarRef.current?.getApi?.();
+  if (api) {
+    api.gotoDate(oggi);
+  }
+
+  setSelectedDate(oggi);
+  
+      const weekday = oggi.getDay();
+
+      const sportelloTrovato = Object.keys(sportelli).find(
+        (s) => sportelli[s].weekday === weekday
+      );
+
+      if (sportelloTrovato) {
+        setSelectedSportello(sportelloTrovato);
+      }
+
+      setSelectedDate(oggi);
+      
+      // 👇 QUESTO È IL FIX VISIVO
+  setTimeout(() => {
+    const cells = document.querySelectorAll('.fc-daygrid-day');
+
+    cells.forEach((cell: any) => {
+      const dateStr = cell.getAttribute('data-date');
+
+      if (!dateStr) return;
+
+      const cellDate = new Date(dateStr);
+      cellDate.setHours(0, 0, 0, 0);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (cellDate.getTime() === today.getTime()) {
+        cell.classList.add('bg-blue-500');
+        cell.classList.add('text-white');
+      }
+    });
+  }, 50);
+
+    }
+  }
+}}
 
   dateClick={(info) => {
     const clickedDate = info.date;
