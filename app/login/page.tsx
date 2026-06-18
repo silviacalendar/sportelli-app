@@ -2,7 +2,10 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
+import {
+  onAuthStateChanged,
+  signInWithEmailAndPassword
+} from 'firebase/auth';
 import { auth } from '../lib/firebase';
 
 export default function LoginPage() {
@@ -11,11 +14,15 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
+  // 🔒 evita redirect loop / pagina bianca
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (user) {
         router.replace('/');
+      } else {
+        setLoading(false);
       }
     });
 
@@ -32,6 +39,14 @@ export default function LoginPage() {
       setError('Email o password errati');
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Caricamento...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
