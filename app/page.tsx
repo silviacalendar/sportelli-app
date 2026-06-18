@@ -1,6 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { signOut } from 'firebase/auth';
+import { auth } from '@/app/lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 import Papa from 'papaparse';
 
 import FullCalendar from '@fullcalendar/react';
@@ -197,6 +201,28 @@ function generateSlots(
 
 export default function Home() {
   console.log('HOME CARICATA');
+
+const router = useRouter();
+
+const handleLogout = async () => {
+  await signOut(auth);
+  router.replace('/login');
+};
+
+const [checkingAuth, setCheckingAuth] = useState(true);
+
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      router.replace('/login');
+      return;
+    }
+
+    setCheckingAuth(false);
+  });
+
+  return () => unsubscribe();
+}, [router]);
 
   const [utenteLoggato] = useState(
     'Operatore Admin'
@@ -526,9 +552,22 @@ const filteredUsers = utenti.filter(
     setPhoneError('');
   };
 
+if (checkingAuth) {
+  return <div>Caricamento...</div>;
+}
+
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 p-8">
 
+  <div className="flex justify-end mb-4">
+    <button
+      onClick={handleLogout}
+      className="bg-red-500 text-white px-4 py-2 rounded-xl font-bold"
+    >
+      Logout
+    </button>
+  </div>
+  
       <div className="max-w-7xl mx-auto">
 
         <h1 className="text-5xl font-bold mb-8 text-center">

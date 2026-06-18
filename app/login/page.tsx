@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../lib/firebase';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../lib/firebase';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -12,12 +12,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        router.replace('/');
+      }
+    });
+
+    return () => unsub();
+  }, [router]);
+
   const handleLogin = async () => {
     setError('');
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      router.push('/');
+      router.replace('/');
     } catch (err) {
       setError('Email o password errati');
     }
@@ -26,7 +36,10 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white p-8 rounded-2xl shadow w-full max-w-sm">
-        <h1 className="text-2xl font-bold mb-6">Login Operatori</h1>
+
+        <h1 className="text-2xl font-bold mb-6">
+          Login Operatori
+        </h1>
 
         <input
           type="email"
@@ -54,6 +67,7 @@ export default function LoginPage() {
         >
           Accedi
         </button>
+
       </div>
     </div>
   );
