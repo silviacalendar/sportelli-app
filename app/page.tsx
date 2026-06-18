@@ -209,21 +209,6 @@ const handleLogout = async () => {
   router.replace('/login');
 };
 
-const [checkingAuth, setCheckingAuth] = useState(true);
-
-useEffect(() => {
-  const unsubscribe = onAuthStateChanged(auth, (user) => {
-    if (!user) {
-      router.replace('/login');
-      return;
-    }
-
-    setCheckingAuth(false);
-  });
-
-  return () => unsubscribe();
-}, [router]);
-
   const [utenteLoggato] = useState(
     'Operatore Admin'
   );
@@ -552,9 +537,6 @@ const filteredUsers = utenti.filter(
     setPhoneError('');
   };
 
-if (checkingAuth) {
-  return <div>Caricamento...</div>;
-}
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 p-8">
@@ -567,7 +549,7 @@ if (checkingAuth) {
       Logout
     </button>
   </div>
-  
+
       <div className="max-w-7xl mx-auto">
 
         <h1 className="text-5xl font-bold mb-8 text-center">
