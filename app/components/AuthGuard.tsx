@@ -35,18 +35,13 @@ export default function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [user, loading, pathname, router]);
 
-  if (loading) {
-    return (
-      <div className="h-screen flex items-center justify-center">
-        Caricamento...
-      </div>
-    );
-  }
+if (loading) {
+  return (
+    <div className="h-screen flex items-center justify-center">
+      Caricamento...
+    </div>
+  );
+}
 
-  // 🔥 QUESTO È IL FIX IMPORTANTE
-  if (!user && pathname !== '/login') {
-    return null;
-  }
-
-  return <>{children}</>;
+return <>{children}</>;
 }
