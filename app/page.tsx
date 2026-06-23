@@ -552,9 +552,21 @@ const filteredUsers = utenti.filter(
 
       <div className="max-w-7xl mx-auto">
 
-        <h1 className="text-5xl font-bold mb-8 text-center">
-          Agenda Sportelli
-        </h1>
+<div className="relative flex items-center justify-center mb-8">
+
+  {/* LOGO SINISTRA */}
+  <img
+    src="/logo.png"
+    alt="Logo"
+    className="w-24 h-24 absolute left-0 object-contain"
+  />
+
+  {/* TITOLO CENTRATO */}
+  <h1 className="text-5xl font-bold text-center">
+    Agenda Sportello Digitale
+  </h1>
+
+</div>
 
         <div className="grid md:grid-cols-3 gap-4 mb-10">
 
