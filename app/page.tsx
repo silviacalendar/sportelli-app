@@ -651,9 +651,9 @@ const filteredUsers = utenti.filter(
   initialDate={selectedDate}
 
 headerToolbar={{
-  left: 'prev,next today',
+  left: '',
   center: 'title',
-  right: ''
+  right: 'prev,next'
 }}
 
 customButtons={{
