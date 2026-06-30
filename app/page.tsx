@@ -604,7 +604,7 @@ const filteredUsers = utenti.filter(
   <img
     src="/Logo.png"
     alt="Logo"
-    className="w-24 h-24 absolute left-0 object-contain"
+    className="w-32 h-32 absolute left-0 object-contain"
   />
 
   {/* TITOLO CENTRATO */}
