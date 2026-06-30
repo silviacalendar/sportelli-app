@@ -16,7 +16,9 @@ import { useRef } from 'react';
 
 const GOOGLE_SHEET_CSV =
   'https://docs.google.com/spreadsheets/d/1vJ_w31uFtdzalNQEZlJAQMTHsTIvR5tUMBHNouI-Mck/export?format=csv&gid=0';
-const APPOINTMENTS_CSV =
+const OPERATORI_CSV =
+  'https://docs.google.com/spreadsheets/d/1qOrQqu7a6YLMzb4XLEBaPBhRMFPc305UnufzZ4V3mNM/export?format=csv&gid=0';
+  const APPOINTMENTS_CSV =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vR2pcPyjSYFcjpU8AJeCpm1MUSV9xhU450VPzpldmKcH5x-hKPxcUWpEZ-WaIi9H7n8crHNr01HdsM_/pub?gid=1468271223&single=true&output=csv';
   const APPS_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbx6NlG_V32p8gZxCdBpQPS5iac1ubW1ZHKdX8wRGzyRzstDPWu-N57nYubv0SuowN8/exec';
@@ -209,12 +211,50 @@ const handleLogout = async () => {
   router.replace('/login');
 };
 
-  const [utenteLoggato] = useState(
-    'Operatore Admin'
+const [utenteLoggato, setUtenteLoggato] =
+  useState('');
+
+const [ruoloUtente, setRuoloUtente] =
+  useState('');
+
+useEffect(() => {
+  const unsubscribe = onAuthStateChanged(
+    auth,
+    (user) => {
+      if (user?.email) {
+        setUtenteLoggato(user.email);
+      }
+    }
   );
 
-  const calendarRef = useRef<any>(null);
+  return () => unsubscribe();
+}, []);
 
+useEffect(() => {
+  if (!utenteLoggato) return;
+
+  Papa.parse(OPERATORI_CSV, {
+    download: true,
+    header: true,
+    complete: (results: any) => {
+      console.log('OPERATORI CSV', results.data);
+      
+      const operatore = (results.data || []).find(
+        (row: any) =>
+          row.EMAIL?.trim().toLowerCase() ===
+          utenteLoggato.trim().toLowerCase()
+      );
+
+      if (operatore) {
+        setRuoloUtente(
+          operatore.RUOLO?.trim() || ''
+        );
+      }
+    },
+  });
+}, [utenteLoggato]);
+
+const calendarRef = useRef<any>(null);
   const [
     selectedSportello,
     setSelectedSportello,] = 
@@ -541,14 +581,20 @@ const filteredUsers = utenti.filter(
   return (
     <main className="min-h-screen bg-gradient-to-br from-blue-100 to-purple-100 p-8">
 
-  <div className="flex justify-end mb-4">
-    <button
-      onClick={handleLogout}
-      className="bg-red-500 text-white px-4 py-2 rounded-xl font-bold"
-    >
-      Logout
-    </button>
+<div className="flex justify-between items-center mb-4">
+
+  <div className="text-sm font-semibold">
+    Operatore: {utenteLoggato || 'non rilevato'}
   </div>
+
+  <button
+    onClick={handleLogout}
+    className="bg-red-500 text-white px-4 py-2 rounded-xl font-bold"
+  >
+    Logout
+  </button>
+
+</div>
 
       <div className="max-w-7xl mx-auto">
 
