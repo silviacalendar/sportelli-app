@@ -602,7 +602,7 @@ const filteredUsers = utenti.filter(
 
   {/* LOGO SINISTRA */}
   <img
-    src="/logo.png"
+    src="/Logo.png"
     alt="Logo"
     className="w-24 h-24 absolute left-0 object-contain"
   />
