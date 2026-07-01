@@ -917,7 +917,33 @@ customButtons={{
 
                       const booking =
                         appointments[key];
+const now = new Date();
 
+const inizioSlot =
+  slot.split(' - ')[0];
+
+const [ore, minuti] =
+  inizioSlot.split(':');
+
+const dataOraSlot =
+  new Date(selectedDate);
+
+dataOraSlot.setHours(
+  Number(ore),
+  Number(minuti),
+  0,
+  0
+);
+
+const limitePrenotazione =
+  new Date(dataOraSlot);
+
+limitePrenotazione.setHours(
+  limitePrenotazione.getHours() - 2
+);
+
+const slotPrenotabile =
+  now < limitePrenotazione;
         
                       return (
                         <div
@@ -962,12 +988,15 @@ customButtons={{
 </div>
                       ) : (
                             <>
-                              <div className="mt-2 text-gray-500">
-                                Disponibile
-                              </div>
+<div className="mt-2 text-gray-500">
+  {slotPrenotabile
+    ? 'Disponibile'
+    : 'Non più prenotabile'}
+</div>
 
                               <button
-                                onClick={() => {
+  disabled={!slotPrenotabile}
+  onClick={() => {
 
   const oggi =
     new Date();
@@ -1002,7 +1031,11 @@ customButtons={{
     slot
   );
 }}
-                                className="mt-4 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-xl font-bold"
+                                className={`mt-4 px-4 py-2 rounded-xl font-bold text-white ${
+  slotPrenotabile
+    ? 'bg-green-500 hover:bg-green-600'
+    : 'bg-gray-400 cursor-not-allowed'
+}`}
                               >
                                 Prenota
                               </button>
