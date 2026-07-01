@@ -305,6 +305,15 @@ const calendarRef = useRef<any>(null);
   const currentSportello =
     sportelli[selectedSportello];
 
+const sportelliDelGiorno =
+  selectedDate
+    ? Object.keys(sportelli).filter(
+        (s) =>
+          sportelli[s].weekday ===
+          selectedDate.getDay()
+      )
+    : [];
+
   const slots = generateSlots(
     selectedSportello
   );
@@ -682,13 +691,17 @@ const filteredUsers = utenti.filter(
 
         const weekday = today.getDay();
 
-        const sportelloTrovato = Object.keys(sportelli).find(
-          (s) => sportelli[s].weekday === weekday
-        );
+const sportelliTrovati =
+  Object.keys(sportelli).filter(
+    (s) =>
+      sportelli[s].weekday === weekday
+  );
 
-        if (sportelloTrovato) {
-          setSelectedSportello(sportelloTrovato);
-        }
+if (sportelliTrovati.length > 0) {
+  setSelectedSportello(
+    sportelliTrovati[0]
+  );
+}
       }}
       className="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-xl font-bold"
     >
@@ -868,6 +881,26 @@ customButtons={{
                       selectedDate
                     )}
                   </div>
+
+{sportelliDelGiorno.length > 1 && (
+  <div className="mt-4 flex flex-wrap gap-2">
+    {sportelliDelGiorno.map((sportello) => (
+      <button
+        key={sportello}
+        onClick={() =>
+          setSelectedSportello(sportello)
+        }
+        className={`px-4 py-2 rounded-xl font-bold ${
+          selectedSportello === sportello
+            ? 'bg-white text-blue-700'
+            : 'bg-blue-700 text-white'
+        }`}
+      >
+        {sportello}
+      </button>
+    ))}
+  </div>
+)}
 
                 </div>
 
