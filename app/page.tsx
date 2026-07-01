@@ -1316,16 +1316,24 @@ const slotPrenotabile =
                 Salva
               </button>
 
-              <button
-                onClick={() =>
-                  setSelectedSlot(
-                    null
-                  )
-                }
-                className="flex-1 bg-gray-300 hover:bg-gray-400 p-3 rounded-xl font-bold"
-              >
-                Annulla
-              </button>
+<button
+  onClick={() => {
+    setSelectedSlot(null);
+    setUtenteBloccato(false);
+    setSearchUser('');
+
+    setFormData({
+      nome: '',
+      cognome: '',
+      telefono: '',
+      email: '',
+      intervento: '',
+    });
+  }}
+  className="flex-1 bg-gray-300 hover:bg-gray-400 p-3 rounded-xl font-bold"
+>
+  Annulla
+</button>
 
             </div>
 
