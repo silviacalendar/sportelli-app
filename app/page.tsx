@@ -364,14 +364,16 @@ const isPastDate = (date: Date) => {
     }
   };
 
-  useEffect(() => {
-    const firstDate =
-      getFirstAvailableDate(
-        currentSportello
-      );
+useEffect(() => {
+  if (selectedDate) return;
 
-    setSelectedDate(firstDate);
-  }, [selectedSportello]);
+  const firstDate =
+    getFirstAvailableDate(
+      currentSportello
+    );
+
+  setSelectedDate(firstDate);
+}, []);
 
   
   useEffect(() => {console.log('USEEFFECT PARTITO');
