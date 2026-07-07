@@ -352,6 +352,8 @@ const isPastDate = (date: Date) => {
         formatISO(date);
 
       if (
+         weekday !== 0 &&
+         weekday !== 6 &&
         weekday ===
           sportello.weekday &&
         !festivita[iso] &&
@@ -373,7 +375,7 @@ useEffect(() => {
     );
 
   setSelectedDate(firstDate);
-}, []);
+}, [selectedSportello]);
 
   
   useEffect(() => {console.log('USEEFFECT PARTITO');
@@ -631,11 +633,16 @@ const filteredUsers = utenti.filter(
             (sportello) => (
               <button
                 key={sportello}
-                onClick={() =>
-                  setSelectedSportello(
-                    sportello
-                  )
-                }
+onClick={() => {
+  setSelectedSportello(sportello);
+
+  const firstDate =
+    getFirstAvailableDate(
+      sportelli[sportello]
+    );
+
+  setSelectedDate(firstDate);
+}}
                 className={`p-5 rounded-3xl text-left transition-all shadow-lg border-2 ${
                   selectedSportello ===
                   sportello
@@ -783,6 +790,14 @@ customButtons={{
     const clickedDate = info.date;
 
     const weekday = clickedDate.getDay();
+
+    if (
+  weekday === 0 ||
+  weekday === 6
+) {
+  return;
+}
+
     const iso = formatISO(clickedDate);
 
     if (festivita[iso]) {
