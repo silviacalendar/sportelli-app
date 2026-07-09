@@ -110,7 +110,13 @@ function formatDate(date: Date) {
 
   return `${day}-${month}-${year}`;
 }
-
+  function formatDateLong(date: Date) {
+  return date.toLocaleDateString('it-IT', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+  });
+}
 function formatISO(date: Date) {
   const day = String(
     date.getDate()
@@ -1124,24 +1130,61 @@ const slotPrenotabile =
     </button>
 
     <button
-      onClick={() => {
-        const updated = { ...appointments };
-        delete updated[selectedBooking.key];
+  onClick={() => {
+    const updated = { ...appointments };
+    delete updated[selectedBooking.key];
 
-        setAppointments(updated);
-        setSelectedBooking(null);
-      }}
-      className="flex-1 bg-red-500 hover:bg-red-600 text-white p-3 rounded-xl font-bold"
-    >
-      Elimina
-    </button>
+    setAppointments(updated);
+    setSelectedBooking(null);
+  }}
+  className="flex-1 bg-red-500 hover:bg-red-600 text-white p-3 rounded-xl font-bold"
+>
+  Elimina
+</button>
 
-    <button
-      onClick={() => setSelectedBooking(null)}
-      className="flex-1 bg-gray-300 hover:bg-gray-400 p-3 rounded-xl font-bold"
-    >
-      Chiudi
-    </button>
+<button
+  onClick={() => {
+    if (!selectedBooking.telefono) {
+      alert(
+        'Numero di telefono mancante per questo utente.'
+      );
+      return;
+    }
+
+    const telefono =
+      selectedBooking.telefono.replace(
+        /\D/g,
+        ''
+      );
+
+    const indirizzo =
+      sportelli[selectedSportello]
+        ?.address || '';
+
+    const messaggio =
+      `Buongiorno ${selectedBooking.nome} ${selectedBooking.cognome},
+ricordiamo l'appuntamento di ${formatDateLong(
+        selectedBooking.date
+      )} con lo Sportello Digitale ${selectedSportello} in ${indirizzo}.`;
+
+    const url =
+      `https://web.whatsapp.com/send?phone=39${telefono}&text=${encodeURIComponent(
+        messaggio
+      )}`;
+
+    window.open(url, '_blank');
+  }}
+  className="flex-1 bg-green-500 hover:bg-green-600 text-white p-3 rounded-xl font-bold"
+>
+  WhatsApp
+</button>
+
+<button
+  onClick={() => setSelectedBooking(null)}
+  className="flex-1 bg-gray-300 hover:bg-gray-400 p-3 rounded-xl font-bold"
+>
+  Chiudi
+</button>
   </>
 )}
 
