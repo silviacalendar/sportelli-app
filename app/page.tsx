@@ -602,9 +602,14 @@ const filteredUsers = utenti.filter(
 
 <div className="flex justify-between items-center mb-4">
 
-  <div className="text-sm font-semibold">
+<div className="text-sm font-semibold">
+  <div>
     Operatore: {utenteLoggato || 'non rilevato'}
   </div>
+  <div>
+    Ruolo: {ruoloUtente || 'non rilevato'}
+  </div>
+</div>
 
   <button
     onClick={handleLogout}
@@ -1142,6 +1147,8 @@ const slotPrenotabile =
   Elimina
 </button>
 
+{ruoloUtente === 'ADMIN' && (
+
 <button
   onClick={() => {
     if (!selectedBooking.telefono) {
@@ -1178,6 +1185,7 @@ ricordiamo l'appuntamento di ${formatDateLong(
 >
   WhatsApp
 </button>
+)}
 
 <button
   onClick={() => setSelectedBooking(null)}
