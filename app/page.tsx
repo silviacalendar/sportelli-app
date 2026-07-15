@@ -672,7 +672,9 @@ onClick={() => {
                   }{' '}
                   •{' '}
                   {
-                    sportelli[sportello]
+                    sportello === 'ValBisagno'
+                    ? '09:00'
+                    : sportelli[sportello]
                       .start
                   }{' '}
                   -{' '}
