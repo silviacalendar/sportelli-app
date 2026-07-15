@@ -1010,11 +1010,21 @@ const slotPrenotabile =
     </button>
   )}
 
-  {isPastDate(selectedDate) && (
-    <div className="mt-2 text-gray-500 text-sm font-bold">
-      Solo visualizzazione (storico)
-    </div>
-  )}
+{isPastDate(selectedDate) && (
+  <button
+    onClick={() =>
+      setSelectedBooking({
+        ...booking,
+        slot,
+        key,
+        date: selectedDate,
+      })
+    }
+    className="mt-3 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-xl font-bold"
+  >
+    Visualizza dettagli
+  </button>
+)}
 </div>
                       ) : (
                             <>
