@@ -541,7 +541,27 @@ const filteredUsers = utenti.filter(
   };
 
   const saveAppointment = () => {
-    if (utenteBloccato) return;
+
+    if (
+      utenteBloccato &&
+      ruoloUtente !== 'ADMIN'
+    ) {
+      return;
+    }
+
+    if (
+      utenteBloccato &&
+      ruoloUtente === 'ADMIN'
+    ) {
+      const conferma =
+        window.confirm(
+          'Attenzione: stai salvando un appuntamento con un utente bloccato. Proseguire?'
+        );
+
+      if (!conferma) {
+        return;
+      }
+    }
     if (
       !formData.nome ||
       !formData.cognome ||
