@@ -22,6 +22,8 @@ const OPERATORI_CSV =
   'https://docs.google.com/spreadsheets/d/e/2PACX-1vR2pcPyjSYFcjpU8AJeCpm1MUSV9xhU450VPzpldmKcH5x-hKPxcUWpEZ-WaIi9H7n8crHNr01HdsM_/pub?gid=1468271223&single=true&output=csv';
   const APPS_SCRIPT_URL =
   'https://script.google.com/macros/s/AKfycbx6NlG_V32p8gZxCdBpQPS5iac1ubW1ZHKdX8wRGzyRzstDPWu-N57nYubv0SuowN8/exec';
+const CHIUSURE_CSV =
+  'https://docs.google.com/spreadsheets/d/1fam0KPqdH7SXj-m2BQT3Rzb-gAlP1XJu7VaC66SzEhQ/export?format=csv&gid=0';
 
 const sportelli: any = {
   Bolzaneto: {
@@ -272,6 +274,9 @@ const calendarRef = useRef<any>(null);
   const [appointments, setAppointments] =
     useState<any>({});
 
+const [chiusure, setChiusure] =
+  useState<any[]>([]);
+
     const [utenti, setUtenti] =
   useState<any[]>([]);
 
@@ -319,6 +324,17 @@ const sportelliDelGiorno =
           selectedDate.getDay()
       )
     : [];
+
+const chiusuraGiorno =
+  selectedDate
+    ? chiusure.find(
+        (c) =>
+          c.DATA ===
+            formatISO(selectedDate) &&
+          c.SPORTELLO ===
+            selectedSportello
+      )
+    : null;
 
   const slots = generateSlots(
     selectedSportello
@@ -457,6 +473,22 @@ useEffect(() => {
 
       setAppointments(
         loadedAppointments
+      );
+    },
+  });
+}, []);
+useEffect(() => {
+  Papa.parse(CHIUSURE_CSV, {
+    download: true,
+    header: true,
+    complete: (results: any) => {
+      console.log(
+        'CHIUSURE CARICATE',
+        results.data
+      );
+
+      setChiusure(
+        results.data || []
       );
     },
   });
@@ -832,6 +864,13 @@ customButtons={{
     const weekday = arg.date.getDay();
     const iso = formatISO(arg.date);
 
+const giornoChiuso =
+  chiusure.find(
+    (c:any) =>
+      c.DATA === iso &&
+      c.SPORTELLO === selectedSportello
+  );
+
     const oggi = new Date();
     oggi.setHours(0, 0, 0, 0);
 
@@ -839,6 +878,10 @@ customButtons={{
       return ['bg-red-200'];
     }
 
+if (giornoChiuso) {
+  return ['bg-red-200'];
+}
+    
     if (arg.date < oggi) {
       return ['bg-gray-200'];
     }
@@ -912,6 +955,14 @@ customButtons={{
                     )}
                   </div>
 
+{chiusuraGiorno && (
+  <div className="mt-4 bg-red-100 border-2 border-red-300 text-red-800 p-4 rounded-2xl font-bold">
+    🔴 Sportello chiuso
+    <br />
+    Motivo: {chiusuraGiorno.MOTIVO}
+  </div>
+)}
+
 {sportelliDelGiorno.length > 1 && (
   <div className="mt-4 flex flex-wrap gap-2">
     {sportelliDelGiorno.map((sportello) => (
@@ -974,6 +1025,9 @@ limitePrenotazione.setHours(
 
 const slotPrenotabile =
   now < limitePrenotazione;
+
+const sportelloChiuso =
+  !!chiusuraGiorno;
         
                       return (
                         <div
@@ -1029,13 +1083,18 @@ const slotPrenotabile =
                       ) : (
                             <>
 <div className="mt-2 text-gray-500">
-  {slotPrenotabile
-    ? 'Disponibile'
-    : 'Non più prenotabile'}
+  {sportelloChiuso
+    ? 'Sportello chiuso'
+    : slotPrenotabile
+      ? 'Disponibile'
+      : 'Non più prenotabile'}
 </div>
 
                               <button
-  disabled={!slotPrenotabile}
+  disabled={
+    !slotPrenotabile ||
+    sportelloChiuso
+  }
   onClick={() => {
 
   const oggi =
@@ -1072,7 +1131,7 @@ const slotPrenotabile =
   );
 }}
                                 className={`mt-4 px-4 py-2 rounded-xl font-bold text-white ${
-  slotPrenotabile
+  slotPrenotabile && !sportelloChiuso
     ? 'bg-green-500 hover:bg-green-600'
     : 'bg-gray-400 cursor-not-allowed'
 }`}
