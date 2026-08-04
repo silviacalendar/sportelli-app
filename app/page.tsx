@@ -1227,7 +1227,34 @@ const sportelloChiuso =
 
     <button
   onClick={() => {
-    const updated = { ...appointments };
+
+    if (
+      !confirm(
+        "Confermi la cancellazione dell'appuntamento?"
+      )
+    ) {
+      return;
+    }
+
+    fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        azione: 'CANCELLA',
+        data: selectedBooking.date,
+        ora: selectedBooking.slot,
+        sportello: selectedSportello,
+        operatore: utenteLoggato,
+      }),
+    });
+
+    const updated = {
+      ...appointments,
+    };
+
     delete updated[selectedBooking.key];
 
     setAppointments(updated);
