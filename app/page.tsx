@@ -437,6 +437,14 @@ useEffect(() => {
       (results.data || []).forEach(
         (row: any) => {
           if (
+  String(row.STATO || '')
+    .trim()
+    .toUpperCase() === 'CANCELLATO'
+) {
+  return;
+}
+
+          if (
             !row.DATA ||
             !row.ORA
           ) {
