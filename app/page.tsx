@@ -423,7 +423,9 @@ useEffect(() => {
     });
   }, []);
 useEffect(() => {
-  Papa.parse(APPOINTMENTS_CSV, {
+Papa.parse(
+  `${APPOINTMENTS_CSV}&t=${Date.now()}`,
+{
     download: true,
     header: true,
     complete: (results: any) => {
@@ -432,14 +434,38 @@ useEffect(() => {
         results
       );
 
+      console.log(
+  "PRIMA RIGA APPUNTAMENTI:",
+  results.data[0]
+);
+
+console.log(
+  "COLONNE CSV:",
+  results.meta.fields
+);
+
       const loadedAppointments: any = {};
+
+      console.log(
+  "RESET APPUNTAMENTI"
+);
 
       (results.data || []).forEach(
         (row: any) => {
-          if (
+          const stato =
   String(row.STATO || '')
     .trim()
-    .toUpperCase() === 'CANCELLATO'
+    .toUpperCase();
+
+console.log(
+  "CONTROLLO STATO:",
+  row,
+  stato
+);
+
+if (
+  stato === "CANCELLATO" ||
+  stato === "CANCELLED"
 ) {
   return;
 }
@@ -470,6 +496,7 @@ useEffect(() => {
               row.INTERVENTO,
             prenotatoDa:
               row.OPERATORE,
+              sportello: row.SPORTELLO,
           };
         }
       );
@@ -478,6 +505,11 @@ useEffect(() => {
         'APPOINTMENTS CARICATI',
         loadedAppointments
       );
+
+console.log(
+  "FINALE DA CARICARE:",
+  loadedAppointments
+);
 
       setAppointments(
         loadedAppointments
@@ -626,7 +658,7 @@ const filteredUsers = utenti.filter(
     'Content-Type': 'application/json',
   },
   body: JSON.stringify({
-    data: selectedDate,
+    data: formatISO(selectedDate),
     ora: selectedSlot,
     nome: formData.nome,
     cognome: formData.cognome,
@@ -1252,20 +1284,24 @@ const sportelloChiuso =
       },
       body: JSON.stringify({
         azione: 'CANCELLA',
-        data: selectedBooking.date,
+        data: formatISO(selectedBooking.date),
         ora: selectedBooking.slot,
-        sportello: selectedSportello,
+        sportello: selectedBooking.sportello,
         operatore: utenteLoggato,
       }),
     });
 
-    const updated = {
-      ...appointments,
-    };
+const updated = {
+  ...appointments,
+};
 
-    delete updated[selectedBooking.key];
+delete updated[selectedBooking.key];
 
-    setAppointments(updated);
+setAppointments(updated);
+
+setTimeout(() => {
+  window.location.reload();
+}, 5000);
     setSelectedBooking(null);
   }}
   className="flex-1 bg-red-500 hover:bg-red-600 text-white p-3 rounded-xl font-bold"
