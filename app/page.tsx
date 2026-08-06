@@ -1283,12 +1283,12 @@ const sportelloChiuso =
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        azione: 'CANCELLA',
-        data: formatISO(selectedBooking.date),
-        ora: selectedBooking.slot,
-        sportello: selectedBooking.sportello,
-        operatore: utenteLoggato,
-      }),
+  azione: 'CANCELLA',
+  data: formatISO(selectedBooking.date),
+  ora: selectedBooking.slot,
+  sportello: selectedBooking.sportello || selectedSportello,
+  operatore: utenteLoggato,
+}),
     });
 
 const updated = {
