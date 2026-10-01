@@ -1227,6 +1227,13 @@ const sportelloChiuso =
         <div><b>Telefono:</b> {selectedBooking.telefono}</div>
         <div><b>Email:</b> {selectedBooking.email}</div>
         <div><b>Intervento:</b> {selectedBooking.intervento}</div>
+  <div>
+    <b>Data:</b> {formatDateLong(selectedBooking.date)}
+  </div>
+
+  <div>
+    <b>Ora:</b> {selectedBooking.slot.split(' - ')[0]}
+  </div>
       </div>
 
       <div className="flex gap-3 mt-6">
