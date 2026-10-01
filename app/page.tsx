@@ -292,6 +292,12 @@ const [chiusure, setChiusure] =
   const [searchUser, setSearchUser] =
     useState('');
 
+  const [showHistoryModal, setShowHistoryModal] =
+    useState(false);
+
+  const [historySearch, setHistorySearch] =
+    useState('');
+
   const [error, setError] = useState('');
 
   const [phoneError, setPhoneError] =
@@ -540,6 +546,104 @@ const filteredUsers = utenti.filter(
         .includes(searchUser.toLowerCase())
   );
 
+  const normalizeText = (text: string) =>
+    String(text || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim()
+      .toLowerCase();
+
+  const historyAppointments = Object.entries(
+    appointments
+  )
+    .map(([key, booking]: [string, any]) => {
+      const match = key.match(
+        /^(.+)-(\d{2}-\d{2}-\d{4})-(.+)$/
+      );
+
+      if (!match) return null;
+
+      const sportello = match[1];
+      const dateString = match[2];
+      const slot = match[3];
+
+      const [
+        giorno,
+        mese,
+        anno,
+      ] = dateString.split('-').map(Number);
+
+      const [
+        ora,
+        minuti,
+      ] = slot
+        .split(' - ')[0]
+        .split(':')
+        .map(Number);
+
+      const date = new Date(
+        anno,
+        mese - 1,
+        giorno,
+        ora,
+        minuti
+      );
+
+      return {
+        key,
+        booking,
+        sportello,
+        dateString,
+        slot,
+        date,
+      };
+    })
+    .filter(Boolean) as any[];
+
+  const searchedHistoryAppointments =
+    historySearch.trim()
+      ? historyAppointments
+          .filter((item: any) => {
+            const nomeCompleto =
+              `${item.booking.nome || ''} ${
+                item.booking.cognome || ''
+              }`;
+
+            return normalizeText(
+              nomeCompleto
+            ).includes(
+              normalizeText(historySearch)
+            );
+          })
+          .sort(
+            (a: any, b: any) =>
+              a.date.getTime() -
+              b.date.getTime()
+          )
+      : [];
+
+  const nowForHistory = new Date();
+
+  const pastHistoryAppointments =
+    searchedHistoryAppointments.filter(
+      (item: any) =>
+        item.date.getTime() <
+        nowForHistory.getTime()
+    );
+
+  const futureHistoryAppointments =
+    searchedHistoryAppointments
+      .filter(
+        (item: any) =>
+          item.date.getTime() >=
+          nowForHistory.getTime()
+      )
+      .sort(
+        (a: any, b: any) =>
+          a.date.getTime() -
+          b.date.getTime()
+      );
+
  const selectUser = (utente: any) => {
   setFormData({
     ...formData,
@@ -786,6 +890,39 @@ onClick={() => {
               </button>
             )
           )}
+        </div>
+
+        {/* RICERCA STORICO APPUNTAMENTI */}
+
+        <div className="mb-10 bg-white rounded-3xl p-5 shadow-xl">
+          <div className="flex items-center justify-between gap-4 flex-wrap">
+
+            <div>
+              <div className="text-xl font-bold">
+                🔎 Ricerca appuntamenti
+              </div>
+
+              <div className="text-gray-600 mt-1">
+                Cerca lo storico di un utente e verifica
+                eventuali appuntamenti futuri.
+              </div>
+            </div>
+
+            <button
+              onClick={() => {
+                setHistorySearch('');
+                setShowHistoryModal(true);
+              }}
+              className="bg-indigo-500 hover:bg-indigo-600 text-white px-5 py-3 rounded-xl font-bold shadow"
+            >
+              🔎 Cerca storico appuntamenti
+            </button>
+
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-8">
+
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8">
@@ -1575,7 +1712,183 @@ setTimeout(() => {
 
           </div>
         </div>
+       )}
+
+      {showHistoryModal && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+          <div className="bg-white p-8 rounded-3xl w-full max-w-2xl shadow-2xl overflow-y-auto max-h-[90vh]">
+
+            <div className="flex justify-between items-center mb-5">
+              <h2 className="text-3xl font-bold">
+                🔎 Storico appuntamenti
+              </h2>
+
+              <button
+                onClick={() => {
+                  setShowHistoryModal(false);
+                  setHistorySearch('');
+                }}
+                className="bg-gray-300 hover:bg-gray-400 px-4 py-2 rounded-xl font-bold"
+              >
+                ✕
+              </button>
+            </div>
+
+            <input
+              type="text"
+              autoFocus
+              placeholder="Inserisci nome e cognome..."
+              value={historySearch}
+              onChange={(e) =>
+                setHistorySearch(e.target.value)
+              }
+              className="w-full p-4 border-2 rounded-xl text-lg"
+            />
+
+            {!historySearch.trim() && (
+              <div className="mt-5 text-gray-500 text-center">
+                Inserisci il nome o il cognome dell'utente
+                per cercare gli appuntamenti.
+              </div>
+            )}
+
+            {historySearch.trim() &&
+              searchedHistoryAppointments.length === 0 && (
+                <div className="mt-5 bg-yellow-100 text-yellow-800 p-4 rounded-xl font-semibold">
+                  Nessun appuntamento trovato per questo utente.
+                </div>
+              )}
+
+            {historySearch.trim() &&
+              pastHistoryAppointments.length > 0 && (
+                <div className="mt-6">
+
+                  <h3 className="text-2xl font-bold mb-3">
+                    📋 Appuntamenti passati
+                  </h3>
+
+                  <div className="space-y-3">
+
+                    {pastHistoryAppointments.map(
+                      (item: any) => (
+                        <div
+                          key={item.key}
+                          className="bg-gray-100 rounded-2xl p-4 border"
+                        >
+
+                          <div className="font-bold text-lg">
+                            {item.booking.nome}{' '}
+                            {item.booking.cognome}
+                          </div>
+
+                          <div className="mt-2">
+                            📅{' '}
+                            {formatDate(
+                              item.date
+                            )}
+                          </div>
+
+                          <div>
+                            🕐{' '}
+                            {item.slot}
+                          </div>
+
+                          <div>
+                            📍{' '}
+                            {item.sportello}
+                          </div>
+
+                          <div className="mt-2">
+                            <b>Motivo intervento:</b>{' '}
+                            {item.booking.intervento ||
+                              'Non indicato'}
+                          </div>
+
+                        </div>
+                      )
+                    )}
+
+                  </div>
+                </div>
+              )}
+
+            {historySearch.trim() &&
+              futureHistoryAppointments.length > 0 && (
+                <div className="mt-8">
+
+                  <h3 className="text-2xl font-bold mb-3">
+                    📅 Appuntamenti futuri
+                  </h3>
+
+                  <div className="space-y-3">
+
+                    {futureHistoryAppointments.map(
+                      (item: any) => (
+                        <div
+                          key={item.key}
+                          className="bg-blue-50 rounded-2xl p-4 border-2 border-blue-200"
+                        >
+
+                          <div className="font-bold text-lg">
+                            {item.booking.nome}{' '}
+                            {item.booking.cognome}
+                          </div>
+
+                          <div className="mt-2">
+                            📅{' '}
+                            {formatDate(
+                              item.date
+                            )}
+                          </div>
+
+                          <div>
+                            🕐{' '}
+                            {item.slot}
+                          </div>
+
+                          <div>
+                            📍{' '}
+                            {item.sportello}
+                          </div>
+
+                          <div className="mt-2">
+                            <b>Motivo intervento:</b>{' '}
+                            {item.booking.intervento ||
+                              'Non indicato'}
+                          </div>
+
+                        </div>
+                      )
+                    )}
+
+                  </div>
+                </div>
+              )}
+
+            {historySearch.trim() &&
+              searchedHistoryAppointments.length > 0 &&
+              pastHistoryAppointments.length === 0 &&
+              futureHistoryAppointments.length === 0 && (
+                <div className="mt-5 text-gray-500">
+                  Nessun appuntamento passato o futuro trovato.
+                </div>
+              )}
+
+            <button
+              onClick={() => {
+                setShowHistoryModal(false);
+                setHistorySearch('');
+              }}
+              className="w-full mt-8 bg-gray-300 hover:bg-gray-400 p-3 rounded-xl font-bold"
+            >
+              Chiudi
+            </button>
+
+          </div>
+        </div>
       )}
+
     </main>
   );
 }
