@@ -1331,10 +1331,9 @@ setTimeout(() => {
         ?.address || '';
 
     const messaggio =
-      `Buongiorno ${selectedBooking.nome} ${selectedBooking.cognome},
-ricordiamo l'appuntamento di ${formatDateLong(
+      `Buongiorno, ricordiamo l'appuntamento di ${formatDateLong(
         selectedBooking.date
-      )} con lo Sportello Digitale ${selectedSportello} in ${indirizzo}.`;
+      )} alle ore ${selectedBooking.slot.split(' - ')[0]} con lo Sportello Digitale ${selectedSportello} in ${indirizzo}. Per eventuali comunicazioni può rispondere a questo messaggio.`;
 
     const url =
       `https://web.whatsapp.com/send?phone=39${telefono}&text=${encodeURIComponent(
