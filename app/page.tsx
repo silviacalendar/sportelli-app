@@ -62,8 +62,8 @@ const sportelli: any = {
   'Prà': {
     weekday: 3,
     day: 'Mercoledì',
-    start: '09:00',
-    end: '13:00',
+    start: '13:00',
+    end: '17:00',
     address: 'Via Cravasco 32',
   },
 
@@ -134,8 +134,10 @@ function formatISO(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+
 function generateSlots(
-  sportello: string
+  sportello: string,
+  dataSelezionata?: Date | null
 ) {
   switch (sportello) {
     case 'Bolzaneto':
@@ -175,14 +177,38 @@ function generateSlots(
         '12:45 - 13:30',
       ];
 
-    case 'Prà':
+    case 'Prà': {
+      const dataInizioNuovoOrario =
+        new Date(2026, 10, 4);
+
+      if (dataSelezionata) {
+        const dataConfronto =
+          new Date(dataSelezionata);
+
+        dataConfronto.setHours(0, 0, 0, 0);
+
+        if (
+          dataConfronto <
+          dataInizioNuovoOrario
+        ) {
+          return [
+            '09:00 - 09:45',
+            '09:45 - 10:30',
+            '10:30 - 11:15',
+            '11:15 - 12:00',
+            '12:00 - 12:45',
+          ];
+        }
+      }
+
       return [
-        '09:00 - 09:45',
-        '09:45 - 10:30',
-        '10:30 - 11:15',
-        '11:15 - 12:00',
-        '12:00 - 12:45',
+        '13:00 - 13:45',
+        '13:45 - 14:30',
+        '14:30 - 15:15',
+        '15:15 - 16:00',
+        '16:00 - 16:45',
       ];
+    }
 
     case 'Prè':
       return [
@@ -208,6 +234,7 @@ function generateSlots(
       return [];
   }
 }
+
 
 export default function Home() {
   console.log('HOME CARICATA');
@@ -343,8 +370,9 @@ const chiusuraGiorno =
     : null;
 
   const slots = generateSlots(
-    selectedSportello
-  );
+  selectedSportello,
+  selectedDate
+);
 const isPastDate = (date: Date) => {
   const oggi = new Date();
   oggi.setHours(0, 0, 0, 0);
